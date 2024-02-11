@@ -19,10 +19,11 @@ class HBNBCommand(cmd.Cmd):
 
         return True
 
-    def empty_line(self):
+    def emptyline(self):
         """ Handle when empty line is entered """
 
-        return False
+        pass
+
 
 if __name__ == '__main__':
     HBNBCommand().cmdloop()
