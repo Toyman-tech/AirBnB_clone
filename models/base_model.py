@@ -15,17 +15,18 @@ class BaseModel:
                 args - positional argument
                 kwargs - ketword argument
         """
-        self.id = str(uuid.uuid4())
-        self.created_at = datetime.now()
-        self.updated_at = self.created_at
-        if (kwags):
+        if (kwargs):
             ft = "%Y-%m-%dT%H:%M:%S.%f"
 
             for key, value in kwargs.items():
                 if key == "created_at" or key == "updated_at":
                     self.__dict__[key] = datetime.strptime(value, ft)
-                else:
+                elif key != "__class__":
                     self.__dict__[key] = value
+        else:
+            self.id = str(uuid.uuid4())
+            self.created_at = datetime.now()
+            self.updated_at = datetime.now()
 
     def __str__(self):
         """ print [<classname>] (<self.id>) <self.__dict__> """
