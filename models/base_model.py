@@ -1,50 +1,53 @@
-#!/usr/bin/env python3
-""" Defines a base class for all the modules. """
-
-import uuid
+#!/usr/bin/python3
+"""A module that implements the BaseModel class"""
+from uuid import uuid4
 from datetime import datetime
 
 
 class BaseModel:
-    """ A base class that other class inherit from """
-
-    def __int__(self, *args, **kwargs):
-        """initialize instance of class.
-
-            Args:
-                args - positional argument
-                kwargs - ketword argument
-        """
-        if (kwargs):
-            ft = "%Y-%m-%dT%H:%M:%S.%f"
-
-            for key, value in kwargs.items():
-                if key == "created_at" or key == "updated_at":
-                    self.__dict__[key] = datetime.strptime(value, ft)
-                elif key != "__class__":
-                    self.__dict__[key] = value
-        else:
-            self.id = str(uuid.uuid4())
+    """A class that defines all common attributes/methods for other classes"""
+    def __init__(self, *args, **kwargs):
+        if not kwargs:
+            from models import storage
+            self.id = str(uuid4())
             self.created_at = datetime.now()
             self.updated_at = datetime.now()
+            storage.new(self)
+        else:
+            del kwargs["__class__"]
+            kwargs["created_at"] = datetime.strptime(kwargs["created_at"],
+                                                     "%Y-%m-%dT%H:%M:%S.%f")
+            kwargs["updated_at"] = datetime.strptime(kwargs["updated_at"],
+                                                     "%Y-%m-%dT%H:%M:%S.%f")
+            self.__dict__.update(kwargs)
 
     def __str__(self):
-        """ print [<classname>] (<self.id>) <self.__dict__> """
-
-        return f"[{self.__class__.name}] ({self.id}) {self.__dict__}"
+        """
+        Returns the string representation of BaseModel object.
+        [<class name>] (<self.id>) <self.__dict__>
+        """
+        return "[{}] ({}) {}".format(
+            type(self).__name__, self.id, self.__dict__)
 
     def save(self):
-        """ update_at with the current datetime """
-
-        updated_at = datetime.now()
+        """Updates 'self.updated_at' with the current datetime"""
+        from models import storage
+        self.updated_at = datetime.now()
+        storage.save()
 
     def to_dict(self):
-        """ returns a dictionary cantaining all key-value of __dict_
-        of the instance """
-
-        dictionary = self.__dict__.copy()
-        dictionary["created_at"] = self.created_at.isoformat()
-        dictionary["updated_at"] = self.updated_at.isoformat()
-        dictionary["__class__"] = self.__class__.__name__
-
-        return (dictionary)
+        """
+        returns a dictionary containing all keys/values of __dict__
+        of the instance:
+               - only instance attributes set will be returned
+               - a key __class__ is added with the class name of the object
+               - created_at and updated_at must be converted to string object
+                            in ISO object
+        """
+        my_dict = self.__dict__.copy()
+        my_dict["__class__"] = self.__class__.__name__
+        for key, value in self.__dict__.items():
+            if key in ("created_at", "updated_at"):
+                value = self.__dict__[key].isoformat()
+                my_dict[key] = value
+        return my_dict
